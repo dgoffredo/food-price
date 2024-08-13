@@ -1,0 +1,5 @@
+/node_modules/
+/db.sqlite
+/scrape-session-*.tar.br
+/package.json
+/package-lock.json

@@ -1,0 +1,73 @@
+#!/bin/sh
+
+set -x
+
+if [ $# -ne 2 ]; then
+  >&2 printf 'usage: %s <sqlite database file path> <scratch directory>\n' "$0"
+  exit 1
+fi
+
+# Use `realpath` because we `cd` into `$scratch` below.
+db=$(realpath "$1")
+scratch=$2
+bin=$(realpath "$(dirname "$0")")
+
+# audit NAME -- COMMAND ...
+#     Executes COMMAND and produces the following files:
+#     - NAME.status contains the exit status.
+#     - NAME.stdout is a copy of the standard output file.
+#     - NAME.stderr is a copy of the standard error file.
+audit() (
+  if [ $# -lt 3 ]; then
+    >&2 printf 'Need at least 3 arguments, but you gave %d: %s\n' $# "$*"
+    return 1
+  fi
+  if [ "$2" != '--' ]; then
+    >&2 printf 'Second argument must be "--" to separate name from command. You gave: %s\n' "$*"
+    return 2
+  fi
+
+  name=$1
+  shift 2
+  dir=$(mktemp -d)
+  mkfifo "$dir/stdout"
+  mkfifo "$dir/stderr"
+  <"$dir/stdout" tee "$name.stdout" &
+  <"$dir/stderr" >&2 tee "$name.stderr" &
+
+  "$@" >"$dir/stdout" 2>"$dir/stderr"
+  status=$?
+  echo "$status" >"$name.status"
+  wait
+  rm -r "$dir"
+  return "$status"
+)
+
+is_integer() {
+  [ "$1" -eq "$1" ] >/dev/null 2>&1
+}
+
+cd "$scratch" || exit 2
+
+scrape_session_id=$(python "$bin/start_scrape_session.py" "$db")
+if ! is_integer "$scrape_session_id"; then
+  >&2 printf 'start_scrape_session.py produced invalid output: %s\n' "$scrape_session_id"
+  exit 2
+fi
+
+audit scrape -- node "$bin/scrape.mjs" | \
+  audit parse -- python "$bin/parse.py" | \
+  audit persist -- python "$bin/persist.py" "$db" "$scrape_session_id"
+
+python "$bin/finish_scrape_session.py" "$db" "$scrape_session_id"
+
+# Go to the parent directory of $scratch and zip it up.
+cd ../ || exit 3
+dir=$(basename "$scratch")
+tarball="scrape-session-$scrape_session_id.tar"
+tar cf "$tarball" "$dir"
+brotli --best --lgwin=0 "$tarball"
+ls -l "$tarball.br"
+rm "$tarball"
+rm -r "$dir"
+

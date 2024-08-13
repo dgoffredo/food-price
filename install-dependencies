@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -x
+
+pip install beautifulsoup4
+npm install puppeteer
