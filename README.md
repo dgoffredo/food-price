@@ -7,6 +7,8 @@ This is a web scraper that organizes the entire catalog of a supermarket into a
 SQLite database.
 
 ```console
+$ ./install-dependencies
+[...]
 $ sqlite3 db.sqlite <schema.sql
 $ mkdir scratch
 $ ./scrape db.sqlite scratch
