@@ -1,3 +1,4 @@
+import datetime
 from pathlib import Path
 import sqlite3
 import sys
@@ -50,5 +51,8 @@ if __name__ == '__main__':
     """, (rowid,))
 
     db.execute("""
-    update ScrapeSession set log = ? where id = ?;
-    """, (log_id, scrape_session))
+    update ScrapeSession set log = ?, when_end_iso = ? where id = ?;
+    """, (
+      log_id,
+      datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+      scrape_session))
