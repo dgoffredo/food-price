@@ -7,6 +7,8 @@ const storeLocatorURL = 'https://www.keyfood.com/store/keyFood/en/store-locator'
 const catalogURL = page =>
   `https://urbanmarketplace.keyfood.com/store/urbanMarketplace/en/Departments/c/Departments?sort=name-asc&q=%3AdptSortIndex&page=${page}`;
 
+const storeCode = 566;
+
 (async () => {
   const sleepMilliseconds = ms => new Promise(r => setTimeout(() => r(), ms));
   // Launch the browser and open a new blank page
@@ -33,7 +35,7 @@ const catalogURL = page =>
   console.error('Sleeping a little (I found that this was necessary)...');
   await sleepMilliseconds(5000);
   console.error('Waiting for the store to appear in the search results...');
-  const catalog = await page.waitForSelector('button.js-entry__view-catalog[data-store="566"]');
+  const catalog = await page.waitForSelector(`button.js-entry__view-catalog[data-store="${storeCode}"]`);
   console.error('Clicking on the "view catalog" button for the store and waiting for page load...');
   await Promise.all([
     catalog.click(),
