@@ -25,6 +25,9 @@ create table if not exists ScrapedCatalogEntry(
   price text,
   cart_code text,
   product_page_path text,
+  -- If product_page_path is '/foo/bar/baz', then code is 'baz'.
+  -- Without pattern extraction, the following is the only way to do this.
+  code text as (replace(product_page_path, rtrim(product_page_path, replace(product_page_path, '/', '')), '')),
 
   foreign key (scrape_session) references ScrapeSession(id),
   -- Rows are unique.
