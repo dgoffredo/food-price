@@ -97,6 +97,7 @@ create table if not exists ScrapedStore(
   -- Each store has a unique code, but since information about a store might
   -- change, the primary key of this table is separate.
   id integer primary key not null,
+  when_iso text not null,
   code integer not null,
   name text,
   -- phone is the 10-digit hyphen-separated US phone number,

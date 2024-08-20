@@ -149,7 +149,7 @@ def make_hours_id(db, hours_json):
   return id
 
 
-def make_store_id(db, entry):
+def make_store_id(now, db, entry):
   code = None
   name = None
   address = None
@@ -217,27 +217,31 @@ def make_store_id(db, entry):
     return id
   # We have to insert a row.
   cursor = execute(db, """insert into ScrapedStore(
+  when_iso,
   code,
   name,
   phone,
   address,
   hours,
-  url) values (?, ?, ?, ?, ?, ?);
-  """, (code, name, phone, address_id, hours_id, url_id))
+  url) values (?, ?, ?, ?, ?, ?, ?);
+  """, (now, code, name, phone, address_id, hours_id, url_id))
 
   rowid = cursor.lastrowid
   (id,), = execute(db, "select id from ScrapedStore where rowid = ?;", (rowid,))
   return id
 
 
-def main(db_path, input_file):
+def main(now, db_path, input_file):
   db = sqlite3.connect(db_path)
   soup = BeautifulSoup(input_file, 'html.parser')
   entries = soup.select('li.list__entry')
   for entry in entries:
-    print('store row ID is', make_store_id(db, entry))
+    print('store row ID is', make_store_id(now, db, entry))
     db.commit()
 
 
 if __name__ == '__main__':
-  main(db_path=sys.argv[1], input_file=sys.stdin)
+  main(
+    now=datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+    db_path=sys.argv[1],
+    input_file=sys.stdin)
