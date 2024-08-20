@@ -149,7 +149,7 @@ def make_hours_id(db, hours_json):
   return id
 
 
-def make_store_id(db, button):
+def make_store_id(db, entry):
   code = None
   name = None
   address = None
@@ -159,6 +159,8 @@ def make_store_id(db, button):
   phone = None
   zip_code = None
   hours_json = None
+
+  button, = entry.select('button.entry__session_button')
   for key, value in button.attrs.items():
     # address and town are converted to title case (specifically,
     # `string.capwords(...)`), but name isn't.
@@ -170,7 +172,10 @@ def make_store_id(db, button):
     elif key == 'data-name':
       name = value.strip()
     elif key == 'data-address':
-      address = string.capwords(value.strip())
+      # Sometimes address is empty in the <button> attribute. In that
+      # case, use an analogous <div> instead.
+      value = value.strip() or entry.select('div.entry-address div.entry-address')[0].text.strip()
+      address = string.capwords(value)
     elif key == 'data-site-url':
       url = value.strip()
     elif key == 'data-town':
@@ -178,7 +183,10 @@ def make_store_id(db, button):
     elif key == 'data-region':
       state = value.strip().upper()
     elif key == 'data-phone':
-      phone = value.strip()
+      # Sometimes phone is empty in the <button> attribute. In that case, use
+      # an analogous <div> instead. It will probably also be empty, but who
+      # knows?
+      phone = value.strip() or entry.select('div.entry-phone')[0].text.strip()
       if phone == '':
         phone = None
     elif key == 'data-postal':
@@ -225,9 +233,9 @@ def make_store_id(db, button):
 def main(db_path, input_file):
   db = sqlite3.connect(db_path)
   soup = BeautifulSoup(input_file, 'html.parser')
-  buttons = soup.select('button.entry__session_button')
-  for button in buttons:
-    print('store row ID is', make_store_id(db, button))
+  entries = soup.select('li.list__entry')
+  for entry in entries:
+    print('store row ID is', make_store_id(db, entry))
     db.commit()
 
 
