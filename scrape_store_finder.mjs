@@ -22,7 +22,7 @@ const zipCode = Number(process.argv[2]);
   console.error(`Navigating to store locator: ${locator}...`);
   await page.goto(locator);
   console.error('Sleeping a little (I found that this was necessary)...');
-  await sleepMilliseconds(10000);
+  await sleepMilliseconds(5000);
   console.error('Writing page HTML to standard output...')
   process.stdout.write(await page.$eval('html', el => el.outerHTML));
 
