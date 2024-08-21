@@ -151,3 +151,32 @@ create table if not exists ScrapedCatalogEntry(
   foreign key (scrape_session) references ScrapeSession(id),
   -- Rows are unique.
   unique (scrape_session, name, size, price, cart_code, product_page_path));
+
+-- CandidateStore returns the order in which to scrape store catalogs.
+-- Each row is a store. The columns selected are those needed for scraping the
+-- catalog for that store.
+create view if not exists CandidateStore(
+  id,
+  code,
+  domain,
+  slug) as
+  -- This query returns stores in the order of "most need scraping" first.
+  -- If a store has never had its catalog scraped, then it appears first.
+  -- Lower store codes take priority.
+  -- If a store has had its catalog scraped before, then the stores for which
+  -- it's been the longest take priority.
+  -- The query returns all columns needed to scrape the catalog of each store
+  -- row.
+  with Candidate as (
+    select store2.code, store2.id, max(session.when_begin_iso) as last_scraped
+    from ScrapedStore store left join ScrapeSession session
+      on store.id = session.store
+    inner join ScrapedStore store2 on store2.code  = store.code
+    group by store.code, store.when_iso
+    having store2.when_iso = max(store.when_iso))
+  select store.id, store.code, url.domain, url.slug
+  from ScrapedStore store inner join Candidate candidate
+    on store.id = candidate.id
+  inner join StoreURL url
+    on url.id = store.url
+  order by candidate.last_scraped, candidate.code;

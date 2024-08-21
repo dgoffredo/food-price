@@ -49,25 +49,44 @@ is_integer() {
 
 cd "$scratch" || exit 2
 
-scrape_session_id=$(python "$bin/start_scrape_session.py" "$db")
+zip_code=10009
+node "$bin/scrape_store_finder.mjs" "$zip_code" >stores.html || exit 3
+python "$bin/persist_stores.py" "$db" <stores.html || exit 4
+
+# e.g.:
+# 140     432     www.keyfood.com keyfood
+"$bin/get_store_to_sync" "$db" | tee store.txt
+<store.txt read -r store_id store_code store_domain store_slug
+
+scrape_session_id=$(python "$bin/start_scrape_session.py" "$db" "$store_id")
 if ! is_integer "$scrape_session_id"; then
   >&2 printf 'start_scrape_session.py produced invalid output: %s\n' "$scrape_session_id"
   exit 2
 fi
 
-audit scrape -- node "$bin/scrape.mjs" | \
+audit scrape -- node "$bin/scrape.mjs" "$zip_code" "$store_code" "$store_domain" "$store_slug" | \
   audit parse -- python "$bin/parse.py" | \
   audit persist -- python "$bin/persist.py" "$db" "$scrape_session_id"
 
 python "$bin/finish_scrape_session.py" "$db" "$scrape_session_id"
 
-# Go to the parent directory of $scratch and zip it up.
-cd ../ || exit 3
+# If any of the programs in the above pipeline failed, then tar the scratch
+# directory and compress it. Regardless, delete the scratch directory.
+save_it=no
+for prog in scrape parse persist; do
+  if [ "$(cat "$prog.status")" -ne 0 ]; then
+    save_it=yes
+    break
+  fi
+done
+set -e
+cd ../
 dir=$(basename "$scratch")
-tarball="scrape-session-$scrape_session_id.tar"
-tar cf "$tarball" "$dir"
-brotli --best --lgwin=0 "$tarball"
-ls -l "$tarball.br"
-rm "$tarball"
+if [ "$save_it" = yes ]; then
+  tarball="scrape-session-$scrape_session_id.tar"
+  tar cf "$tarball" "$dir"
+  brotli --best --lgwin=0 "$tarball"
+  ls -l "$tarball.br"
+  rm "$tarball"
+fi
 rm -r "$dir"
-

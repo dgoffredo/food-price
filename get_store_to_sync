@@ -1,0 +1,17 @@
+#!/bin/sh
+
+if [ $# -ne 1 ]; then
+  >&2 printf 'usage: %s SQLITE_DB\n' "$(basename "$0")"
+  exit 1
+fi
+
+db=$1
+
+sqlite3 --readonly "$db" <<'END_SQL'
+.mode tabs
+.headers off
+
+select id, code, domain, slug
+from CandidateStore
+limit 1;
+END_SQL

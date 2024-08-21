@@ -20,10 +20,11 @@ if __name__ == '__main__':
     usage(sys.stderr)
     sys.exit(2)
 
-  with sqlite3.connect(sys.argv[1]) as db:
-    for line in sys.stdin:
-      try:
-        product = json.loads(line)
+  db = sqlite3.connect(sys.argv[1])
+  for line in sys.stdin:
+    try:
+      product = json.loads(line)
+      with db:
         db.execute("""
         insert or ignore into ScrapedCatalogEntry(
           scrape_session,
@@ -40,5 +41,5 @@ if __name__ == '__main__':
           product.get('price'),
           product.get('cart_code'),
           product.get('product_page_path')))
-      except Exception:
-        traceback.print_exc()
+    except Exception:
+      traceback.print_exc()

@@ -8,9 +8,9 @@ import urllib.parse
 
 
 def execute(db, query, params):
-  print(query, file=sys.stderr)
-  print(params, file=sys.stderr)
-  print('-------', file=sys.stderr)
+  # print(query, file=sys.stderr)
+  # print(params, file=sys.stderr)
+  # print('-------', file=sys.stderr)
   return db.execute(query, params)
 
 
@@ -236,7 +236,8 @@ def main(now, db_path, input_file):
   soup = BeautifulSoup(input_file, 'html.parser')
   entries = soup.select('li.list__entry')
   for entry in entries:
-    print('store row ID is', make_store_id(now, db, entry))
+    store_id = make_store_id(now, db, entry)
+    # print('store row ID is', store_id)
     db.commit()
 
 

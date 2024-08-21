@@ -1,43 +1,39 @@
 import puppeteer from 'puppeteer';
 import fs from 'node:fs/promises';
+import process from 'node:process';
 
-// const storeLocatorURL = 'https://www.keyfood.com/store/keyFood/en/store-locator';
+const [zipCode, storeCode, storeDomain, storeSlug] = process.argv.slice(2);
+
 const storeLocatorURL = ({zipCode}) => `https://www.keyfood.com/store/keyFood/en/store-locator?query=${zipCode}&radius=40`;
-// https://keyfoodstores.keyfood.com/store/keyFood/en/store-locator?query=10009&radius=40
 
 // Page number is zero-based.
-// const catalogURL = page =>
-//   `https://urbanmarketplace.keyfood.com/store/urbanMarketplace/en/Departments/c/Departments?sort=name-asc&q=%3AdptSortIndex&page=${page}`;
-
 const catalogURL = ({domain, storeName, page}) =>
   `https://${domain}/store/${storeName}/en/Departments/c/Departments?sort=name-asc&q=%3AdptSortIndex&page=${page}`;
-
-// https://fooduniverse.keyfood.com/store/foodUniverse/en/Departments/c/Departments?q=%3Aname-asc&sort=department&page=${page}
-// https://www.keyfood.com/store/keyFood/en/c/Departments?sort=name-asc&q=%3AdptSortIndex%3Anew%3Atrue#
-// https://www.keyfood.com/store/keyFood/en/c/Departments?sort=name-asc&q=%3AdptSortIndex%3Anew%3Atrue#
-// https://www.keyfood.com/store/keyFood/en/c/Departments?sort=name-asc&q=%3AdptSortIndex%3Anew%3Atrue#
-
-const zipCode = 10009;
-// const storeCode = 566;
-// const storeCode = 2308;
-// const storeCode = 1750;
-const storeCode = 1826;
 
 (async () => {
   const sleepMilliseconds = ms => new Promise(r => setTimeout(() => r(), ms));
   // Launch the browser and open a new blank page
   const browser = await puppeteer.launch({
-    headless: false
+    headless: true
   });
 
   const page = await browser.newPage();
   await page.setViewport({width: 1920, height: 1080});
+  await page.setRequestInterception(true);
+  // Don't download images.
+  page.on('request', request => {
+    if (request.resourceType() === 'image') {
+      request.abort();
+    } else {
+      request.continue();
+    }
+  });
 
   const locator = storeLocatorURL({zipCode});
   console.error(`Navigating to store locator: ${locator}...`);
   await page.goto(locator);
   console.error('Sleeping a little (I found that this was necessary)...');
-  await sleepMilliseconds(5000);
+  await sleepMilliseconds(10000);
   console.error('Waiting for the store to appear in the search results...');
   const catalog = await page.waitForSelector(`button.js-entry__view-catalog[data-store="${storeCode}"]`);
   console.error(await catalog.evaluate(el => el.outerHTML));
@@ -58,8 +54,8 @@ const storeCode = 1826;
         try {
           const url = catalogURL({
             page: i,
-            domain: 'fooduniverse.keyfood.com',
-            storeName: 'fooduniverse'
+            domain: storeDomain,
+            storeName: storeSlug,
           });
           console.error(`Fetching catalog page ${url}... attempt ${attempt + 1}/${max_attempts}`);
           await page.goto(url);
