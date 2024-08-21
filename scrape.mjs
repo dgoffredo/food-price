@@ -18,6 +18,7 @@ const catalogURL = ({domain, storeName, page}) =>
   });
 
   const page = await browser.newPage();
+  await page.setDefaultTimeout(10000); // 10s instead of 30s
   await page.setViewport({width: 1920, height: 1080});
   await page.setRequestInterception(true);
   // Don't download images.
@@ -61,7 +62,7 @@ const catalogURL = ({domain, storeName, page}) =>
             domain: storeDomain,
             storeName: storeSlug,
           });
-          console.error(`Fetching store ${storeCode} catalog page ${i}... attempt ${attempt + 1}/${max_attempts}`);
+          console.error(`Fetching store ${storeCode} page ${i} (<${url})>)... attempt ${attempt + 1}/${max_attempts}`);
           await page.goto(url);
           const html = await page.$eval('html', el => el.outerHTML);
           const html_file_path = `${i}.html`;
