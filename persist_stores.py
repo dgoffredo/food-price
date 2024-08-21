@@ -233,7 +233,7 @@ def make_store_id(now, db, entry):
 
 def main(now, db_path, input_file):
   db = sqlite3.connect(db_path)
-  soup = BeautifulSoup(input_file, 'html.parser')
+  soup = BeautifulSoup(input_file, 'lxml')
   entries = soup.select('li.list__entry')
   for entry in entries:
     store_id = make_store_id(now, db, entry)

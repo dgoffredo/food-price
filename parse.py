@@ -10,7 +10,7 @@ def normalize(text):
 
 
 def parse_file(html_file):
-  soup = BeautifulSoup(html_file, 'html.parser')
+  soup = BeautifulSoup(html_file, 'lxml')
   for product in soup.select('.product-item__wrap'):
     try:
       info = {}

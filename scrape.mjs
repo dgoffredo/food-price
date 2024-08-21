@@ -57,7 +57,7 @@ const catalogURL = ({domain, storeName, page}) =>
             domain: storeDomain,
             storeName: storeSlug,
           });
-          console.error(`Fetching catalog page ${url}... attempt ${attempt + 1}/${max_attempts}`);
+          console.error(`Fetching store ${storeCode} catalog page ${i}... attempt ${attempt + 1}/${max_attempts}`);
           await page.goto(url);
           const html = await page.$eval('html', el => el.outerHTML);
           const html_file_path = `${i}.html`;
