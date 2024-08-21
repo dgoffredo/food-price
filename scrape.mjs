@@ -32,11 +32,15 @@ const catalogURL = ({domain, storeName, page}) =>
   const locator = storeLocatorURL({zipCode});
   console.error(`Navigating to store locator: ${locator}...`);
   await page.goto(locator);
-  console.error('Sleeping a little (I found that this was necessary)...');
-  await sleepMilliseconds(10000);
+  console.error('Sleeping a little...');
+  await sleepMilliseconds(5000);
   console.error('Waiting for the store to appear in the search results...');
   const catalog = await page.waitForSelector(`button.js-entry__view-catalog[data-store="${storeCode}"]`);
   console.error(await catalog.evaluate(el => el.outerHTML));
+  console.error('Scrolling to the button...');
+  await catalog.scrollIntoView()
+  console.error('Sleeping a little more...');
+  await sleepMilliseconds(3000);
   console.error('Clicking on the "view catalog" button for the store and waiting for page load...');
   await Promise.all([
     catalog.click(),
