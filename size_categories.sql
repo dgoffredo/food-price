@@ -1,7 +1,7 @@
 select coalesce(
   re_matchi('LB', size, 'MASS_POUNDS'),
   re_matchi('[.0-9]+\s+LBS?', size, 'MASS_POUNDS'),
-  re_matchi('[.0-9]+\s+OZ', size, 'MASS_OUNCES'),
+  re_matchi('[.0-9]+\s+(OZ|M)', size, 'MASS_OUNCES'),
   re_matchi('([0-9]+\s+X\s+)[.0-9]+\s+OZ', size, 'MASS_OUNCES_TIMES_N'),
   re_matchi('[.0-9]+\s+G', size, 'MASS_GRAMS'),
   re_matchi('[.0-9]+\s+KG', size, 'MASS_KILOGRAMS'),
