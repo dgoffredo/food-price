@@ -5,3 +5,4 @@ select coalesce(
   'OTHER: ' || price) as category
 from ScrapedCatalogEntry
 where category like 'OTHER: %';
+

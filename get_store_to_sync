@@ -10,8 +10,10 @@ db=$1
 sqlite3 --readonly "$db" <<'END_SQL'
 .mode tabs
 .headers off
+.timeout 5000
 
 select id, code, domain, slug
 from CandidateStore
 limit 1;
 END_SQL
+

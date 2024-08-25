@@ -90,3 +90,8 @@ if [ "$save_it" = yes ]; then
   rm "$tarball"
 fi
 rm -r "$dir"
+
+db_copy="$(dirname "$db")/db.tmp"
+cp "$db" "$db_copy"
+mv "$db_copy" "$db.snapshot"
+

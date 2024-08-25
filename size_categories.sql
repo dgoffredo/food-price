@@ -24,3 +24,4 @@ select coalesce(
 from ScrapedCatalogEntry
 group by category
 order by freq;
+
