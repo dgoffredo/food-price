@@ -137,20 +137,21 @@ create table if not exists ScrapeSession(
   foreign key (store) references ScrapedStore(id),
   foreign key (log) references ScrapeSessionLog(id));
 
+create table if not exists ScrapedCatalogEntryName(
+  id integer primary key not null,
+  name text not null unique);
+
 create table if not exists ScrapedCatalogEntry(
-  scrape_session int not null,
-  name text,
+  scrape_session int not null, -- references ScrapeSession(id)
+  code text,
+  name integer, -- references ScrapedCatalogEntryName(id)
   size text,
   price text,
-  cart_code text,
-  product_page_path text,
-  -- If product_page_path is '/foo/bar/baz', then code is 'baz'.
-  -- Without pattern extraction, the following is the only way to do this.
-  code text as (replace(product_page_path, rtrim(product_page_path, replace(product_page_path, '/', '')), '')),
 
   foreign key (scrape_session) references ScrapeSession(id),
+  foreign key (name) references ScrapedCatalogEntryName(id),
   -- Rows are unique.
-  unique (scrape_session, name, size, price, cart_code, product_page_path));
+  unique (scrape_session, code, name, size, price));
 
 -- CandidateStore returns the order in which to scrape store catalogs.
 -- Each row is a store. The columns selected are those needed for scraping the
@@ -180,3 +181,15 @@ create view if not exists CandidateStore(
   inner join StoreURL url
     on url.id = store.url
   order by candidate.last_scraped, candidate.code;
+
+-- Some of these indexes will be created automatically due to the foreign key
+-- constraints, but I'll be explicit about it anyway.
+create index IndexScrapeSessionLog on ScrapeSession(log);
+create index IndexScrapeSessionStore on ScrapeSession(store);
+create index IndexScrapedCatalogEntryScrapeSession on ScrapedCatalogEntry(scrape_session);
+create index IndexScrapedStoreURL on ScrapedStore(url);
+create index IndexScrapedStoreHours on ScrapedStore(hours);
+create index IndexScrapedStoreAddress on ScrapedStore(address);
+create index IndexScrapedCatalogEntryCode on ScrapedCatalogEntry(code);
+create index IndexScrapedCatalogEntryName on ScrapedCatalogEntryName(name)
+

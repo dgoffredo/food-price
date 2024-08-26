@@ -69,7 +69,10 @@ const catalogURL = ({domain, storeName, page}) =>
             const html_file_path = `${i}.html`;
             await fs.writeFile(html_file_path, html);
             console.log(html_file_path);
-            const next = await page.waitForSelector('li.pagination-next');
+            // The "next" button won't be there if there were zero results, so
+            // fail faster waiting for this element -- we already dumped the
+            // page HTML.
+            const next = await page.waitForSelector('li.pagination-next', {timeout: 1000});
             const className = await next.evaluate(el => el.className);
             if (className.split(' ').includes('disabled')) {
               console.error("That was the last page.");
@@ -81,8 +84,7 @@ const catalogURL = ({domain, storeName, page}) =>
           }
         }
         if (attempt === max_attempts) {
-          console.error('Too many failures.');
-          process.exit(1);
+          throw Error('Too many failures.');
         }
       }
     }());
