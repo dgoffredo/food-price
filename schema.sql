@@ -118,13 +118,13 @@ create table if not exists ScrapedStore(
 create table if not exists ScrapeSessionLog(
   id integer primary key not null,
   -- the exit status and stderr of the Puppeteer NodeJS script scrape.mjs
-  scrape_status int,
+  scrape_status integer,
   scrape_stderr text,
   -- the exit status and stderr of the BeautifulSoup Python script parse.py
-  parse_status int,
+  parse_status integer,
   parse_stderr text,
   -- the exit status and stderr of the SQLite Python script persist.py
-  persist_status int,
+  persist_status integer,
   persist_stderr text);
 
 create table if not exists ScrapeSession(
@@ -139,10 +139,12 @@ create table if not exists ScrapeSession(
 
 create table if not exists ScrapedCatalogEntryName(
   id integer primary key not null,
-  name text not null unique);
+  name text not null,
+
+  unique(name));
 
 create table if not exists ScrapedCatalogEntry(
-  scrape_session int not null, -- references ScrapeSession(id)
+  scrape_session integer not null, -- references ScrapeSession(id)
   code text,
   name integer, -- references ScrapedCatalogEntryName(id)
   size text,
