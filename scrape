@@ -70,15 +70,19 @@ audit scrape -- node "$bin/scrape.mjs" "$zip_code" "$store_code" "$store_domain"
 
 python "$bin/finish_scrape_session.py" "$db" "$scrape_session_id"
 
+# Don't let puppeteer fill up the disk.
+find /tmp -maxdepth 1 -type d -name 'puppeteer_dev_chrome_profile-*' -exec rm -rf {} \;
+
 # If any of the programs in the above pipeline failed, then tar the scratch
 # directory and compress it. Regardless, delete the scratch directory.
 save_it=no
-for prog in scrape parse persist; do
-  if [ "$(cat "$prog.status")" -ne 0 ]; then
-    save_it=yes
-    break
-  fi
-done
+# TODO: nah...
+# for prog in scrape parse persist; do
+#   if [ "$(cat "$prog.status")" -ne 0 ]; then
+#     save_it=yes
+#     break
+#   fi
+# done
 set -e
 cd ../
 dir=$(basename "$scratch")

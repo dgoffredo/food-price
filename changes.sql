@@ -1,6 +1,19 @@
+drop view if exists Change;
+
+create view Change(
+  store
+, code
+, name
+, changes
+, prices
+, min_price
+, max_price
+, "%change"
+) as
 with MinMax as (
   select
-    code
+    store
+  , code
   , name
   , count(*) as changes
   , group_concat(trim(price, ' each per pound lb'), ' ') as prices
@@ -8,7 +21,8 @@ with MinMax as (
   , max(cast(trim(price, '$ each per pound lb') as real)) as max_price
   from (
     select
-      date(previous_when) as "before"
+      store
+    , date(previous_when) as "before"
     , date(when_begin_iso) as "after"
     , code
     , name
@@ -18,7 +32,8 @@ with MinMax as (
     , previous_price
     from (
       select
-        sesh.when_begin_iso
+        store.id as store
+      , sesh.when_begin_iso
       , lag(sesh.when_begin_iso) over (partition by store.code, entry.code order by sesh.when_begin_iso) as previous_when
       , entry.code
       , name.name
@@ -29,17 +44,16 @@ with MinMax as (
       from ScrapedCatalogEntry entry
         inner join ScrapeSession sesh on entry.scrape_session = sesh.id
         inner join ScrapedCatalogEntryName name on entry.name = name.id
-        inner join ScrapedStore store on sesh.store = store.id where store.code = 566) Staggered
+        inner join ScrapedStore store on sesh.store = store.id) Staggered
     where price != previous_price or size != previous_size
-    order by code desc, when_begin_iso
+    order by store, code desc, when_begin_iso
   ) Changes
-  group by code, name
+  group by store, code, name
   order by changes desc
 )
 select
   *
 , round((max_price - min_price) / min_price * 100, 1) as "%change"
 from MinMax
-order by "%change" desc
-limit 38;
+order by "%change" desc;
 

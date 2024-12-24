@@ -12,7 +12,8 @@ const zipCode = Number(process.argv[2]);
 (async () => {
   const sleepMilliseconds = ms => new Promise(r => setTimeout(() => r(), ms));
   const browser = await puppeteer.launch({
-    headless: true
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
   const page = await browser.newPage();

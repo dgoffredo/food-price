@@ -14,7 +14,8 @@ const catalogURL = ({domain, storeName, page}) =>
   const sleepMilliseconds = ms => new Promise(r => setTimeout(() => r(), ms));
   // Launch the browser and open a new blank page
   const browser = await puppeteer.launch({
-    headless: true
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
   const page = await browser.newPage();
@@ -90,10 +91,10 @@ const catalogURL = ({domain, storeName, page}) =>
     }());
 
   } catch (error) {
-    const now = Math.floor(Date.now() / 1000);
-    await page.screenshot({
-      path: `/tmp/store.${storeCode}.${now}.jpg`
-    });
+    // const now = Math.floor(Date.now() / 1000);
+    // await page.screenshot({
+    //   path: `/tmp/store.${storeCode}.${now}.jpg`
+    // });
     throw error;
   }
 
